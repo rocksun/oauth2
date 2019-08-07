@@ -21,10 +21,12 @@ func main() {
 	manager := manage.NewDefaultManager()
 
 	clientStore, _ := mysql.NewClientStore(db, mysql.WithClientStoreTableName("oauth2db"))
+	// clientStore.Create()
 	tokenStore, _ := mysql.NewTokenStore(db)
 
-	manager.MapTokenStorage(tokenStore)
 	manager.MapClientStorage(clientStore)
+	manager.MapTokenStorage(tokenStore)
+
 	srv := server.NewDefaultServer(manager)
 	srv.SetAllowGetAccessRequest(true)
 	srv.SetClientInfoHandler(server.ClientFormHandler)
@@ -38,5 +40,17 @@ func main() {
 		log.Println("Response Error:", re.Error.Error())
 	})
 
+	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
+		err := srv.HandleAuthorizeRequest(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	})
+
+	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		srv.HandleTokenRequest(w, r)
+	})
+
 	log.Fatal(http.ListenAndServe(":9096", nil))
+
 }
