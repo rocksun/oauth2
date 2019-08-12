@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -38,6 +39,18 @@ func main() {
 
 	srv.SetResponseErrorHandler(func(re *errors.Response) {
 		log.Println("Response Error:", re.Error.Error())
+	})
+
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			id := r.FormValue("id")
+			secrete := r.FormValue("secrete")
+			fmt.Println(id, secrete)
+			http.Error(w, "", http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "Only support post", http.StatusBadRequest)
+
 	})
 
 	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
